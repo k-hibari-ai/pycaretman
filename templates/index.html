@@ -1,0 +1,1905 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>解析丸 - 武士道AI解析道場</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700;900&family=Zen+Kaku+Gothic+New:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Zen Kaku Gothic New', 'Noto Serif JP', serif;
+            background: #ffffff;
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(0,0,0,0.02) 1px, transparent 1px),
+                radial-gradient(circle at 80% 80%, rgba(0,0,0,0.02) 1px, transparent 1px);
+            background-size: 50px 50px;
+            min-height: 100vh;
+            padding: 20px;
+            color: #1a1a1a;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(90deg, transparent 49.8%, rgba(0,0,0,0.03) 50%, transparent 50.2%),
+                linear-gradient(0deg, transparent 49.8%, rgba(0,0,0,0.03) 50%, transparent 50.2%);
+            background-size: 100px 100px;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+            position: relative;
+            padding: 40px 0;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 4px;
+            background: #000000;
+            border-radius: 2px;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 2px;
+            background: #666666;
+        }
+
+        .header h1 {
+            font-family: 'Noto Serif JP', serif;
+            font-size: 4rem;
+            font-weight: 900;
+            margin-bottom: 20px;
+            color: #000000;
+            letter-spacing: 8px;
+            position: relative;
+            text-shadow: 2px 2px 0px #f0f0f0;
+        }
+
+        .header h1::before {
+            content: '◆';
+            position: absolute;
+            left: -60px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #000000;
+            font-size: 2rem;
+        }
+
+        .header h1::after {
+            content: '◆';
+            position: absolute;
+            right: -60px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #000000;
+            font-size: 2rem;
+        }
+
+        .header p {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #333333;
+            letter-spacing: 4px;
+            margin-top: 10px;
+        }
+
+        .card {
+            background: #ffffff;
+            border: 3px solid #000000;
+            border-radius: 0;
+            padding: 40px;
+            margin-bottom: 40px;
+            box-shadow: 
+                8px 8px 0px #000000,
+                12px 12px 0px #666666;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: #000000;
+            z-index: -1;
+        }
+
+        .card:hover {
+            transform: translate(-4px, -4px);
+            box-shadow: 
+                12px 12px 0px #000000,
+                16px 16px 0px #666666;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #000000;
+            position: relative;
+        }
+
+        .card-header::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            width: 80px;
+            height: 3px;
+            background: #666666;
+        }
+
+        .card-header i {
+            font-size: 2.5rem;
+            margin-right: 20px;
+            color: #000000;
+        }
+
+        .card-header h3 {
+            font-family: 'Noto Serif JP', serif;
+            font-size: 2rem;
+            font-weight: 900;
+            color: #000000;
+            letter-spacing: 4px;
+        }
+
+        .card-header .badge {
+            margin-left: auto;
+            padding: 10px 20px;
+            background: #000000;
+            color: white;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            border-radius: 0;
+        }
+
+        .hidden-section {
+            display: none;
+        }
+
+        .form-group {
+            margin-bottom: 35px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 15px;
+            font-family: 'Noto Serif JP', serif;
+            font-weight: 700;
+            color: #000000;
+            font-size: 1.3rem;
+            letter-spacing: 2px;
+        }
+
+        .option-card {
+            background: #ffffff;
+            border: 3px solid #000000;
+            border-radius: 0;
+            padding: 30px;
+            margin-bottom: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .option-card::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: #f8f8f8;
+            z-index: -1;
+            transition: all 0.3s ease;
+        }
+
+        .option-card:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px #000000;
+        }
+
+        .option-card:hover::before {
+            background: #f0f0f0;
+        }
+
+        .option-card.selected {
+            background: #f8f8f8;
+            box-shadow: 4px 4px 0px #000000;
+            transform: translate(-2px, -2px);
+        }
+
+        .option-card.selected::before {
+            background: #000000;
+        }
+
+        .option-card .form-check-input {
+            margin-right: 20px;
+            transform: scale(1.8);
+            accent-color: #000000;
+        }
+
+        .option-card .form-check-label {
+            font-weight: 700;
+            color: #000000;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            font-size: 1.3rem;
+            letter-spacing: 1px;
+        }
+
+        .option-card .option-icon {
+            font-size: 2.5rem;
+            margin-right: 25px;
+            color: #000000;
+        }
+
+        .option-card .option-description {
+            color: #666666;
+            font-size: 1.1rem;
+            margin-top: 15px;
+            margin-left: 70px;
+            font-weight: 500;
+            line-height: 1.6;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-input-display {
+            display: flex;
+            align-items: center;
+            padding: 40px;
+            border: 4px dashed #000000;
+            border-radius: 0;
+            background: #ffffff;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            min-height: 120px;
+            position: relative;
+        }
+
+        .file-input-display::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: #f8f8f8;
+            z-index: -1;
+        }
+
+        .file-input-display:hover {
+            background: #f8f8f8;
+            transform: translate(-3px, -3px);
+            box-shadow: 6px 6px 0px #000000;
+        }
+
+        .file-input-display.dragover {
+            background: #f0f0f0;
+            border-style: solid;
+            transform: translate(-3px, -3px);
+            box-shadow: 6px 6px 0px #000000;
+        }
+
+        .file-input-display i {
+            font-size: 4rem;
+            margin-right: 30px;
+            color: #000000;
+        }
+
+        .file-content {
+            flex: 1;
+        }
+
+        .file-text {
+            color: #000000;
+            font-weight: 700;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .file-subtext {
+            color: #666666;
+            font-size: 1.1rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+
+        .selected-files {
+            margin-top: 25px;
+            padding: 25px;
+            background: #f8f8f8;
+            border-left: 6px solid #000000;
+            border-top: 2px solid #000000;
+            border-right: 2px solid #000000;
+            border-bottom: 2px solid #000000;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .file-item:last-child {
+            border-bottom: none;
+        }
+
+        .file-item i {
+            color: #000000;
+            margin-right: 20px;
+            font-size: 1.5rem;
+        }
+
+        .file-name {
+            flex: 1;
+            font-weight: 700;
+            color: #000000;
+            font-size: 1.2rem;
+        }
+
+        .file-size {
+            color: #666666;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .select-wrapper {
+            position: relative;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 20px 60px 20px 30px;
+            border: 3px solid #000000;
+            border-radius: 0;
+            background: #ffffff;
+            font-size: 1.2rem;
+            color: #000000;
+            transition: all 0.3s ease;
+            appearance: none;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .form-select:focus {
+            outline: none;
+            background: #f8f8f8;
+            box-shadow: 4px 4px 0px #666666;
+            transform: translate(-2px, -2px);
+        }
+
+        .select-wrapper::after {
+            content: '▼';
+            position: absolute;
+            right: 25px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #000000;
+            pointer-events: none;
+            font-size: 1.5rem;
+            font-weight: 900;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 18px 25px;
+            border: 3px solid #000000;
+            border-radius: 0;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            background: #ffffff;
+            color: #000000;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .form-control:focus {
+            outline: none;
+            background: #f8f8f8;
+            box-shadow: 4px 4px 0px #666666;
+            transform: translate(-2px, -2px);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 25px 50px;
+            border: 3px solid #000000;
+            border-radius: 0;
+            font-size: 1.4rem;
+            font-weight: 900;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #ffffff;
+            color: #000000;
+            letter-spacing: 3px;
+            position: relative;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: #f0f0f0;
+            z-index: -1;
+        }
+
+        .btn:hover {
+            background: #000000;
+            color: #ffffff;
+            transform: translate(-4px, -4px);
+            box-shadow: 8px 8px 0px #666666;
+        }
+
+        .btn i {
+            margin-right: 15px;
+            font-size: 1.6rem;
+        }
+
+        .btn-primary {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .btn-primary:hover {
+            background: #000000;
+            color: #ffffff;
+        }
+
+        .btn-success {
+            background: #ffffff;
+            color: #000000;
+            border-width: 4px;
+        }
+
+        .btn-success:hover {
+            background: #000000;
+            color: #ffffff;
+        }
+
+        .loading-spinner {
+            display: none;
+            margin-left: 25px;
+        }
+
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 4px solid #666666;
+            border-radius: 50%;
+            border-top-color: #000000;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .message-area {
+            display: none;
+            padding: 30px;
+            border: 3px solid #000000;
+            border-radius: 0;
+            margin-top: 30px;
+            animation: slideIn 0.5s ease;
+            font-weight: 700;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            position: relative;
+        }
+
+        .message-area::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            z-index: -1;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-success {
+            background: #ffffff;
+            color: #000000;
+            border-left: 8px solid #000000;
+        }
+
+        .alert-success::before {
+            background: #f0f0f0;
+        }
+
+        .alert-warning {
+            background: #ffffff;
+            color: #000000;
+            border-left: 8px solid #666666;
+        }
+
+        .alert-warning::before {
+            background: #f8f8f8;
+        }
+
+        .alert-danger {
+            background: #ffffff;
+            color: #000000;
+            border-left: 8px solid #000000;
+            border-top: 3px solid #000000;
+        }
+
+        .alert-danger::before {
+            background: #f0f0f0;
+        }
+
+        .alert-info {
+            background: #ffffff;
+            color: #000000;
+            border-left: 8px solid #333333;
+        }
+
+        .alert-info::before {
+            background: #f8f8f8;
+        }
+
+        .results-content {
+            background: #ffffff;
+            padding: 35px;
+            border: 3px solid #000000;
+            border-radius: 0;
+            margin-bottom: 35px;
+            box-shadow: 4px 4px 0px #666666;
+        }
+
+        .results-content h5 {
+            color: #000000;
+            margin-bottom: 30px;
+            font-family: 'Noto Serif JP', serif;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            font-size: 1.6rem;
+            letter-spacing: 2px;
+        }
+
+        .results-content h5 i {
+            margin-right: 20px;
+            color: #000000;
+            font-size: 2rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #f0f0f0;
+            border: 2px solid #000000;
+            border-radius: 0;
+            overflow: hidden;
+            margin: 25px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #000000;
+            animation: progressAnimation 3s ease-in-out;
+        }
+
+        @keyframes progressAnimation {
+            from { width: 0%; }
+            to { width: 100%; }
+        }
+
+        .split-options {
+            background: #f8f8f8;
+            padding: 30px;
+            border: 3px solid #000000;
+            border-radius: 0;
+            margin-top: 30px;
+            box-shadow: 2px 2px 0px #666666;
+        }
+
+        .split-options h6 {
+            color: #000000;
+            font-family: 'Noto Serif JP', serif;
+            font-weight: 900;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+        }
+
+        .split-options h6 i {
+            margin-right: 15px;
+            color: #000000;
+            font-size: 1.8rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 50px;
+        }
+
+        .cv-options {
+            background: #f8f8f8;
+            padding: 30px;
+            border: 3px solid #000000;
+            border-radius: 0;
+            margin-top: 30px;
+            box-shadow: 2px 2px 0px #666666;
+        }
+        .cv-options h6 {
+            color: #000000;
+            font-family: 'Noto Serif JP', serif;
+            font-weight: 900;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+        }
+        .cv-options h6 i {
+            margin-right: 15px;
+            color: #000000;
+            font-size: 1.8rem;
+        }
+        .cv-options .option-card {
+            margin-bottom: 15px;
+        }
+
+        .task-type-options {
+            background: #f8f8f8;
+            padding: 30px;
+            border: 3px solid #000000;
+            border-radius: 0;
+            margin-top: 30px;
+            box-shadow: 2px 2px 0px #666666;
+        }
+        .task-type-options h6 {
+            color: #000000;
+            font-family: 'Noto Serif JP', serif;
+            font-weight: 900;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+        }
+        .task-type-options h6 i {
+            margin-right: 15px;
+            color: #000000;
+            font-size: 1.8rem;
+        }
+
+        /* 新しい解析モード選択のスタイル */
+        .analysis-mode-options {
+            background: #f8f8f8;
+            padding: 30px;
+            border: 3px solid #000000;
+            border-radius: 0;
+            margin-top: 30px;
+            box-shadow: 2px 2px 0px #666666;
+        }
+        .analysis-mode-options h6 {
+            color: #000000;
+            font-family: 'Noto Serif JP', serif;
+            font-weight: 900;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+        }
+        .analysis-mode-options h6 i {
+            margin-right: 15px;
+            color: #000000;
+            font-size: 1.8rem;
+        }
+
+        /* 個別モデル設定のスタイル */
+        .individual-model-options {
+            background: #f8f8f8;
+            padding: 30px;
+            border: 3px solid #000000;
+            border-radius: 0;
+            margin-top: 30px;
+            box-shadow: 2px 2px 0px #666666;
+        }
+        .individual-model-options h6 {
+            color: #000000;
+            font-family: 'Noto Serif JP', serif;
+            font-weight: 900;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+        }
+        .individual-model-options h6 i {
+            margin-right: 15px;
+            color: #000000;
+            font-size: 1.8rem;
+        }
+
+        .hyperparameter-section {
+            margin-top: 25px;
+            padding: 25px;
+            background: #ffffff;
+            border: 2px solid #666666;
+            border-radius: 0;
+        }
+
+        .hyperparameter-section h7 {
+            color: #000000;
+            font-family: 'Noto Serif JP', serif;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            font-size: 1.3rem;
+            letter-spacing: 1px;
+        }
+
+        .hyperparameter-section h7 i {
+            margin-right: 10px;
+            color: #000000;
+            font-size: 1.5rem;
+        }
+
+        .hyperparameter-input {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .hyperparameter-input label {
+            min-width: 150px;
+            font-weight: 600;
+            color: #000000;
+            font-size: 1.1rem;
+        }
+
+        .hyperparameter-input input {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid #000000;
+            border-radius: 0;
+            font-size: 1rem;
+            background: #ffffff;
+            color: #000000;
+            font-weight: 500;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 50px;
+            flex-wrap: wrap;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            margin: 20px;
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            border: 4px solid #000000;
+            background: #ffffff;
+            color: #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1.5rem;
+            margin-right: 15px;
+            transition: all 0.4s ease;
+        }
+
+        .step.active .step-number {
+            background: #000000;
+            color: #ffffff;
+            box-shadow: 4px 4px 0px #666666;
+            transform: translate(-2px, -2px);
+        }
+
+        .step.completed .step-number {
+            background: #666666;
+            color: #ffffff;
+            border-color: #666666;
+        }
+
+        .step-text {
+            font-size: 1.3rem;
+            color: #666666;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+
+        .step.active .step-text {
+            color: #000000;
+        }
+
+        .step.completed .step-text {
+            color: #666666;
+        }
+
+        .model-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 3px solid #e0e0e0;
+        }
+
+        .model-list-item:last-child {
+            border-bottom: none;
+        }
+
+        .model-list-item span {
+            font-weight: 700;
+            color: #000000;
+            font-size: 1.3rem;
+        }
+
+        .model-list-item .btn-download {
+            background: #ffffff;
+            color: #000000;
+            padding: 15px 30px;
+            border: 3px solid #000000;
+            border-radius: 0;
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            letter-spacing: 2px;
+        }
+
+        .model-list-item .btn-download:hover {
+            background: #000000;
+            color: #ffffff;
+            transform: translate(-2px, -2px);
+            box-shadow: 4px 4px 0px #666666;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 15px;
+            }
+            
+            .header h1 {
+                font-size: 2.5rem;
+                letter-spacing: 4px;
+            }
+
+            .header h1::before,
+            .header h1::after {
+                display: none;
+            }
+            
+            .card {
+                padding: 25px;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .option-card .option-description {
+                margin-left: 0;
+                margin-top: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>解析丸</h1>
+        </div>
+
+        <div class="step-indicator">
+            <div class="step active" id="step1">
+                <div class="step-number">壱</div>
+                <div class="step-text">戦法選択</div>
+            </div>
+            <div class="step" id="step2">
+                <div class="step-number">弐</div>
+                <div class="step-text">装填</div>
+            </div>
+            <div class="step" id="step3">
+                <div class="step-number">参</div>
+                <div class="step-text">陣立準備</div>
+            </div>
+            <div class="step" id="step4">
+                <div class="step-number">四</div>
+                <div class="step-text">解析断行</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-yin-yang"></i>
+                <h3>解析戦法選択</h3>
+                <div class="badge">道</div>
+            </div>
+            <div class="card-body">
+                <div class="option-card" onclick="selectOption('separate')">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="dataSplitOption" id="optionSeparate" value="separate" checked>
+                        <label class="form-check-label" for="optionSeparate">
+                            <i class="fas fa-sword option-icon"></i>
+                            分割戦法 - 訓練と検証を別々に準備する道
+                        </label>
+                    </div>
+                    <div class="option-description">
+                        既に分かたれたデータを用い、確実なる解析を行う正統の道
+                    </div>
+                </div>
+
+                <div class="option-card" onclick="selectOption('combined')">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="dataSplitOption" id="optionCombined" value="combined">
+                        <label class="form-check-label" for="optionCombined">
+                            <i class="fas fa-balance-scale option-icon"></i>
+                            統合戦法 - 一つのデータを自動で分割する道
+                        </label>
+                    </div>
+                    <div class="option-description">
+                        単一のデータセットをAIの力で訓練・検証に分かつ革新の道
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-primary mt-3" onclick="handleFileUpload()">
+                    <i class="fas fa-upload"></i>
+                    データ装填開始
+                    <div class="loading-spinner" id="initialUploadSpinner">
+                        <div class="spinner"></div>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+        <div id="separateUploadSection" class="card hidden-section">
+            <div class="card-header">
+                <i class="fas fa-archive"></i>
+                <h3>分割装填道場</h3>
+                <div class="badge">個</div>
+            </div>
+            <div class="card-body">
+                <div class="grid">
+                    <div>
+                        <h6 style="color: #000000; font-weight: 900; margin-bottom: 25px; letter-spacing: 2px; font-family: 'Noto Serif JP', serif;">
+                            <i class="fas fa-dumbbell" style="color: #000000; margin-right: 15px;"></i>
+                            訓練
+                        </h6>
+                        <div class="file-input-wrapper">
+                            <input type="file" class="file-input" id="trainFiles" accept=".csv" multiple>
+                            <div class="file-input-display" id="trainFileDisplay">
+                                <i class="fas fa-upload"></i>
+                                <div class="file-content">
+                                    <div class="file-text">訓練用CSVファイルを選択せよ</div>
+                                    <div class="file-subtext">複数ファイル対応</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="trainFilesSelected" style="display: none;" class="selected-files">
+                            <div style="font-weight: 900; margin-bottom: 20px; color: #000000; letter-spacing: 1px;">
+                                <i class="fas fa-check-circle" style="color: #000000;"></i> 装填済み武器：
+                            </div>
+                            <div id="trainFilesList"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h6 style="color: #000000; font-weight: 900; margin-bottom: 25px; letter-spacing: 2px; font-family: 'Noto Serif JP', serif;">
+                            <i class="fas fa-target" style="color: #000000; margin-right: 15px;"></i>
+                            検証
+                        </h6>
+                        <div class="file-input-wrapper">
+                            <input type="file" class="file-input" id="testFiles" accept=".csv" multiple>
+                            <div class="file-input-display" id="testFileDisplay">
+                                <i class="fas fa-upload"></i>
+                                <div class="file-content">
+                                    <div class="file-text">検証用CSVファイルを選択せよ</div>
+                                    <div class="file-subtext">評価用データ（任意）</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="testFilesSelected" style="display: none;" class="selected-files">
+                            <div style="font-weight: 900; margin-bottom: 20px; color: #000000; letter-spacing: 1px;">
+                                <i class="fas fa-check-circle" style="color: #000000;"></i> 装填済み矢：
+                            </div>
+                            <div id="testFilesList"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="combinedUploadSection" class="card hidden-section">
+            <div class="card-header">
+                <i class="fas fa-database"></i>
+                <h3>統合装填道場</h3>
+                <div class="badge">統合</div>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label">統合CSVファイルを選択せよ</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" class="file-input" id="combinedFiles" accept=".csv" multiple>
+                        <div class="file-input-display" id="combinedFileDisplay">
+                            <i class="fas fa-file-csv"></i>
+                            <div class="file-content">
+                                <div class="file-text">統合データファイルを選択またはドラッグ</div>
+                                <div class="file-subtext">自動的に訓練・検証データに分割されます</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="combinedFilesSelected" style="display: none;" class="selected-files">
+                        <div style="font-weight: 900; margin-bottom: 20px; color: #000000; letter-spacing: 1px;">
+                            <i class="fas fa-check-circle" style="color: #000000;"></i> 装填済みファイル：
+                        </div>
+                        <div id="combinedFilesList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card hidden-section" id="pycaretOptions">
+            <div class="card-header">
+                <i class="fas fa-crosshairs"></i>
+                <h3>解析陣立設定</h3>
+                <div class="badge">準備</div>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label">目標列を選択せよ</label>
+                    <div class="select-wrapper">
+                        <select class="form-select" id="targetColumn">
+                        </select>
+                    </div>
+                </div>
+
+                <div class="task-type-options mt-4">
+                    <h6><i class="fas fa-sitemap"></i> 解析の目的</h6>
+                    <div class="option-card" onclick="selectTaskType('classification')">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="taskType" id="taskClassification" value="classification" checked>
+                            <label class="form-check-label" for="taskClassification">
+                                <i class="fas fa-tags option-icon"></i>
+                                分類（識別）の陣
+                            </label>
+                        </div>
+                        <div class="option-description">
+                            データを特定のカテゴリへ仕分け、識別する戦法。
+                        </div>
+                    </div>
+                    <div class="option-card" onclick="selectTaskType('regression')">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="taskType" id="taskRegression" value="regression">
+                            <label class="form-check-label" for="taskRegression">
+                                <i class="fas fa-chart-line option-icon"></i>
+                                回帰（予測）の陣
+                            </label>
+                        </div>
+                        <div class="option-description">
+                            連続する数値の変動を予測し、将来を見通す戦法。
+                        </div>
+                    </div>
+                </div>
+
+                <div class="analysis-mode-options mt-4">
+                    <h6><i class="fas fa-cogs"></i> 解析方法の選択</h6>
+                    <div class="option-card" onclick="selectAnalysisMode('compare')">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="analysisMode" id="analysisCompare" value="compare" checked>
+                            <label class="form-check-label" for="analysisCompare">
+                                <i class="fas fa-trophy option-icon"></i>
+                                自動競合解析 - 全モデル比較の術
+                            </label>
+                        </div>
+                        <div class="option-description">
+                            複数のモデルを自動で比較し、最適なものを選出する伝統の手法。迅速かつ確実。
+                        </div>
+                    </div>
+                    <div class="option-card" onclick="selectAnalysisMode('individual')">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="analysisMode" id="analysisIndividual" value="individual">
+                            <label class="form-check-label" for="analysisIndividual">
+                                <i class="fas fa-bullseye option-icon"></i>
+                                個別特化解析 - 単一モデル極限の術
+                            </label>
+                        </div>
+                        <div class="option-description">
+                            特定のモデルに絞り、ハイパーパラメータを調整して極限まで性能を引き出す奥義。
+                        </div>
+                    </div>
+                </div>
+
+                <div id="individualModelOptions" class="individual-model-options hidden-section">
+                    <h6><i class="fas fa-wrench"></i> 個別モデル設定</h6>
+                    
+                    <div class="form-group">
+                        <label class="form-label">修練させるモデルを選択せよ</label>
+                        <div class="select-wrapper">
+                            <select class="form-select" id="selectedModel">
+                                <option value="">--- モデルを選択 ---</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="option-card" onclick="toggleHyperparameterTuning()">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="enableHyperparameterTuning">
+                            <label class="form-check-label" for="enableHyperparameterTuning">
+                                <i class="fas fa-magic option-icon"></i>
+                                自動ハイパーパラメータ調整を有効にする
+                            </label>
+                        </div>
+                        <div class="option-description">
+                            選択したモデルの性能を最大化するため、自動的にパラメータを調整する。
+                        </div>
+                    </div>
+
+                    <div id="customHyperparameterSection" class="hyperparameter-section">
+                        <h7><i class="fas fa-sliders-h"></i> カスタムハイパーパラメータ</h7>
+                        <div id="hyperparameterInputs">
+                            <p style="color: #666666; font-size: 1rem; margin-top: 10px;">
+                                モデルを選択すると、調整可能なパラメータが表示されます。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="combinedDataSplitOptions" class="split-options hidden-section">
+                    <h6><i class="fas fa-cut"></i> データ分割の法</h6>
+                    
+                    <div class="option-card" onclick="selectSplitMethod('pycaret')">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="splitMethod" id="splitPycaret" value="pycaret" checked>
+                            <label class="form-check-label" for="splitPycaret">
+                                <i class="fas fa-robot option-icon"></i>
+                                自動分割
+                            </label>
+                        </div>
+                        <div class="option-description">
+                            最適な分割比率を自動決定する智恵の法
+                        </div>
+                    </div>
+
+                    <div class="option-card" onclick="selectSplitMethod('manual')">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="splitMethod" id="splitManual" value="manual">
+                            <label class="form-check-label" for="splitManual">
+                                <i class="fas fa-hand-fist option-icon"></i>
+                                手動分割
+                            </label>
+                        </div>
+                        <div class="option-description">
+                            自らの手で分割比率を指定する法
+                        </div>
+                    </div>
+
+                    <div class="form-group hidden-section" id="testSplitRatioGroup">
+                        <label class="form-label">検証データの比率（例: 0.2 = 20%）</label>
+                        <input type="number" class="form-control" id="testSplitRatio" step="0.01" min="0.01" max="0.99" value="0.2" placeholder="0.2">
+                    </div>
+                </div>
+
+                <div class="cv-options mt-4">
+                    <h6><i class="fas fa-sync-alt"></i> 交差検証の儀</h6>
+                    <div class="option-card" onclick="selectCVMethod('default')">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="cvMethod" id="cvDefault" value="default" checked>
+                            <label class="form-check-label" for="cvDefault">
+                                <i class="fas fa-cube option-icon"></i>
+                                通常のK分割（十方）の儀
+                            </label>
+                        </div>
+                        <div class="option-description">
+                            標準的な検証法。データの偏りなく、堅実に評価する古来の術。
+                        </div>
+                    </div>
+                    <div class="option-card" onclick="selectCVMethod('loocv')">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="cvMethod" id="cvLOOCV" value="loocv">
+                            <label class="form-check-label" for="cvLOOCV">
+                                <i class="fas fa-scroll option-icon"></i>
+                                究極の単離（リーブワンアウト）の儀
+                            </label>
+                        </div>
+                        <div class="option-description">
+                            一つ残らず全てのデータを検証に用いる究極の儀。**大規模データには途方もない時を要す覚悟が必要なり。**
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-success mt-4" onclick="runPycaret()">
+                    <i class="fas fa-bolt"></i>
+                    解析断行
+                    <div class="loading-spinner" id="pycaretLoadingSpinner">
+                        <div class="spinner"></div>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+        <div class="card hidden-section" id="resultsArea">
+            <div class="card-header">
+                <i class="fas fa-trophy"></i>
+                <h3>解析戦果</h3>
+                <div class="badge">完遂</div>
+            </div>
+            <div class="card-body">
+                <div class="results-content">
+                    <h5><i class="fas fa-crown"></i> モデル性能評価</h5>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <div id="pycaretResults"></div>
+                </div>
+
+                <div class="results-content">
+                    <h5><i class="fas fa-eye"></i> 予測結果示現（上位十件）</h5>
+                    <div id="predictionResults"></div>
+                </div>
+
+                <div class="results-content">
+                    <h5><i class="fas fa-download"></i> 修練済みモデル獲得</h5>
+                    <div id="downloadModelsList">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="messageArea" class="message-area"></div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        let uploadedTrainFilePath = '';
+        let uploadedTestFilePath = '';
+        let currentDataSplitMethod = '';
+
+        // ページ読み込み時の初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleFileUploadSections();
+            toggleSplitRatio();
+            setupFileInputs();
+            // 初期選択オプションの視覚的な反映
+            selectOption('separate'); 
+            selectSplitMethod('pycaret');
+            selectCVMethod('default');
+            selectTaskType('classification');
+            selectAnalysisMode('compare');
+        });
+
+        function setupFileInputs() {
+            setupFileInput('trainFiles', 'trainFileDisplay', 'trainFilesSelected', 'trainFilesList');
+            setupFileInput('testFiles', 'testFileDisplay', 'testFilesSelected', 'testFilesList');
+            setupFileInput('combinedFiles', 'combinedFileDisplay', 'combinedFilesSelected', 'combinedFilesList');
+        }
+
+        function setupFileInput(inputId, displayId, selectedId, listId) {
+            const fileInput = document.getElementById(inputId);
+            const fileDisplay = document.getElementById(displayId);
+            const selectedDiv = document.getElementById(selectedId);
+            const listDiv = document.getElementById(listId);
+
+            if (!fileInput || !fileDisplay) return;
+
+            fileInput.addEventListener('change', function(e) {
+                updateFileList(e.target.files, selectedDiv, listDiv);
+            });
+
+            fileDisplay.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.classList.add('dragover');
+            });
+
+            fileDisplay.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+            });
+
+            fileDisplay.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    fileInput.files = files;
+                    updateFileList(files, selectedDiv, listDiv);
+                }
+            });
+        }
+
+        function updateFileList(files, selectedDiv, listDiv) {
+            if (!selectedDiv || !listDiv) return;
+            
+            if (files.length > 0) {
+                selectedDiv.style.display = 'block';
+                listDiv.innerHTML = '';
+                
+                Array.from(files).forEach(file => {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'file-item';
+                    fileItem.innerHTML = `
+                        <i class="fas fa-file-csv"></i>
+                        <span class="file-name">${file.name}</span>
+                        <span class="file-size">${formatFileSize(file.size)}</span>
+                    `;
+                    listDiv.appendChild(fileItem);
+                });
+            } else {
+                selectedDiv.style.display = 'none';
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // 解析モード選択
+        function selectAnalysisMode(mode) {
+            document.getElementById('analysisCompare').checked = (mode === 'compare');
+            document.getElementById('analysisIndividual').checked = (mode === 'individual');
+            
+            document.querySelectorAll('.analysis-mode-options .option-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            if (mode === 'compare') {
+                document.querySelector('.analysis-mode-options .option-card[onclick="selectAnalysisMode(\'compare\')"]').classList.add('selected');
+                document.getElementById('individualModelOptions').classList.add('hidden-section');
+            } else {
+                document.querySelector('.analysis-mode-options .option-card[onclick="selectAnalysisMode(\'individual\')"]').classList.add('selected');
+                document.getElementById('individualModelOptions').classList.remove('hidden-section');
+                loadAvailableModels(); // モデルリストを読み込み
+            }
+        }
+
+        // 利用可能なモデルを読み込み
+        async function loadAvailableModels() {
+            const taskType = document.querySelector('input[name="taskType"]:checked').value;
+            
+            try {
+                const response = await fetch(`/get_available_models?task_type=${taskType}`);
+                const data = await response.json();
+                
+                const modelSelect = document.getElementById('selectedModel');
+                modelSelect.innerHTML = '<option value="">--- モデルを選択 ---</option>';
+                
+                if (data.success && data.models) {
+                    Object.entries(data.models).forEach(([key, name]) => {
+                        const option = document.createElement('option');
+                        option.value = key;
+                        option.textContent = name;
+                        modelSelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('モデルリストの取得に失敗しました:', error);
+            }
+        }
+
+        // モデル変更時にハイパーパラメータ設定を更新
+        document.addEventListener('change', function(e) {
+            if (e.target.id === 'selectedModel') {
+                updateHyperparameterInputs(e.target.value);
+            }
+            if (e.target.name === 'taskType') {
+                loadAvailableModels(); // タスクタイプ変更時にモデルリストを更新
+            }
+        });
+
+        function updateHyperparameterInputs(modelKey) {
+            const hyperparameterInputs = document.getElementById('hyperparameterInputs');
+            
+            if (!modelKey) {
+                hyperparameterInputs.innerHTML = '<p style="color: #666666; font-size: 1rem;">モデルを選択すると、調整可能なパラメータが表示されます。</p>';
+                return;
+            }
+
+            // モデル別のハイパーパラメータ設定
+            const hyperparameters = getModelHyperparameters(modelKey);
+            
+            hyperparameterInputs.innerHTML = '';
+            hyperparameters.forEach(param => {
+                const inputDiv = document.createElement('div');
+                inputDiv.className = 'hyperparameter-input';
+                inputDiv.innerHTML = `
+                    <label>${param.name}:</label>
+                    <input type="${param.type}" 
+                           id="hyperparam_${param.key}" 
+                           placeholder="${param.default}" 
+                           ${param.min !== undefined ? `min="${param.min}"` : ''}
+                           ${param.max !== undefined ? `max="${param.max}"` : ''}
+                           ${param.step !== undefined ? `step="${param.step}"` : ''}>
+                `;
+                hyperparameterInputs.appendChild(inputDiv);
+            });
+        }
+
+        function getModelHyperparameters(modelKey) {
+            // 主要なモデルのハイパーパラメータ定義
+            const hyperparameterMap = {
+                'rf': [
+                    {key: 'n_estimators', name: '木の数', type: 'number', default: 100, min: 10, max: 1000},
+                    {key: 'max_depth', name: '最大深度', type: 'number', default: '', min: 1, max: 50}
+                ],
+                'xgboost': [
+                    {key: 'n_estimators', name: '木の数', type: 'number', default: 100, min: 10, max: 1000},
+                    {key: 'learning_rate', name: '学習率', type: 'number', default: 0.1, min: 0.01, max: 1, step: 0.01},
+                    {key: 'max_depth', name: '最大深度', type: 'number', default: 6, min: 1, max: 20}
+                ],
+                'lightgbm': [
+                    {key: 'n_estimators', name: '木の数', type: 'number', default: 100, min: 10, max: 1000},
+                    {key: 'learning_rate', name: '学習率', type: 'number', default: 0.1, min: 0.01, max: 1, step: 0.01},
+                    {key: 'num_leaves', name: '葉の数', type: 'number', default: 31, min: 10, max: 300}
+                ],
+                'catboost': [
+                    {key: 'iterations', name: '反復数', type: 'number', default: 100, min: 10, max: 1000},
+                    {key: 'learning_rate', name: '学習率', type: 'number', default: 0.1, min: 0.01, max: 1, step: 0.01},
+                    {key: 'depth', name: '深度', type: 'number', default: 6, min: 1, max: 16}
+                ],
+                'svm': [
+                    {key: 'C', name: '正則化パラメータ', type: 'number', default: 1.0, min: 0.001, max: 1000, step: 0.001},
+                    {key: 'gamma', name: 'ガンマ', type: 'text', default: 'scale'}
+                ],
+                'knn': [
+                    {key: 'n_neighbors', name: '近傍数', type: 'number', default: 5, min: 1, max: 50}
+                ],
+                'dt': [
+                    {key: 'max_depth', name: '最大深度', type: 'number', default: '', min: 1, max: 50},
+                    {key: 'min_samples_split', name: '分割最小サンプル数', type: 'number', default: 2, min: 2, max: 100}
+                ]
+            };
+
+            return hyperparameterMap[modelKey] || [
+                {key: 'custom_param', name: 'カスタムパラメータ', type: 'text', default: 'このモデルの設定可能なパラメータは自動検出されます'}
+            ];
+        }
+
+        function toggleHyperparameterTuning() {
+            const checkbox = document.getElementById('enableHyperparameterTuning');
+            checkbox.checked = !checkbox.checked;
+            
+            // チェックボックスの親カードの選択状態を更新
+            const optionCard = checkbox.closest('.option-card');
+            if (checkbox.checked) {
+                optionCard.classList.add('selected');
+            } else {
+                optionCard.classList.remove('selected');
+            }
+        }
+
+        // ラジオボタン/オプションカードの選択ロジック
+        function selectOption(option) {
+            document.getElementById('optionSeparate').checked = (option === 'separate');
+            document.getElementById('optionCombined').checked = (option === 'combined');
+            
+            document.querySelectorAll('.card .option-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            if (option === 'separate') {
+                document.querySelector('.card .option-card[onclick="selectOption(\'separate\')"]').classList.add('selected');
+            } else {
+                document.querySelector('.card .option-card[onclick="selectOption(\'combined\')"]').classList.add('selected');
+            }
+            
+            toggleFileUploadSections();
+        }
+
+        function selectSplitMethod(method) {
+            document.getElementById('splitPycaret').checked = (method === 'pycaret');
+            document.getElementById('splitManual').checked = (method === 'manual');
+            
+            document.querySelectorAll('#combinedDataSplitOptions .option-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            if (method === 'pycaret') {
+                document.querySelector('#combinedDataSplitOptions .option-card[onclick="selectSplitMethod(\'pycaret\')"]').classList.add('selected');
+            } else {
+                document.querySelector('#combinedDataSplitOptions .option-card[onclick="selectSplitMethod(\'manual\')"]').classList.add('selected');
+            }
+            
+            toggleSplitRatio();
+        }
+
+        function selectCVMethod(method) {
+            document.getElementById('cvDefault').checked = (method === 'default');
+            document.getElementById('cvLOOCV').checked = (method === 'loocv');
+
+            document.querySelectorAll('.cv-options .option-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+
+            if (method === 'default') {
+                document.querySelector('.cv-options .option-card[onclick="selectCVMethod(\'default\')"]').classList.add('selected');
+            } else {
+                document.querySelector('.cv-options .option-card[onclick="selectCVMethod(\'loocv\')"]').classList.add('selected');
+            }
+        }
+
+        function selectTaskType(type) {
+            document.getElementById('taskClassification').checked = (type === 'classification');
+            document.getElementById('taskRegression').checked = (type === 'regression');
+
+            document.querySelectorAll('.task-type-options .option-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+
+            if (type === 'classification') {
+                document.querySelector('.task-type-options .option-card[onclick="selectTaskType(\'classification\')"]').classList.add('selected');
+            } else {
+                document.querySelector('.task-type-options .option-card[onclick="selectTaskType(\'regression\')"]').classList.add('selected');
+            }
+        }
+
+        // UIセクションの表示/非表示切り替え
+        function toggleFileUploadSections() {
+            const selectedOption = document.querySelector('input[name="dataSplitOption"]:checked').value;
+            
+            if (selectedOption === 'separate') {
+                document.getElementById('separateUploadSection').classList.remove('hidden-section');
+                document.getElementById('combinedUploadSection').classList.add('hidden-section');
+                document.getElementById('combinedDataSplitOptions').classList.add('hidden-section');
+            } else {
+                document.getElementById('separateUploadSection').classList.add('hidden-section');
+                document.getElementById('combinedUploadSection').classList.remove('hidden-section');
+                document.getElementById('combinedDataSplitOptions').classList.remove('hidden-section');
+            }
+            
+            document.getElementById('pycaretOptions').classList.add('hidden-section');
+            document.getElementById('resultsArea').classList.add('hidden-section');
+            uploadedTrainFilePath = '';
+            uploadedTestFilePath = '';
+        }
+
+        function toggleSplitRatio() {
+            const selectedSplitMethod = document.querySelector('input[name="splitMethod"]:checked').value;
+            const ratioGroup = document.getElementById('testSplitRatioGroup');
+            
+            if (selectedSplitMethod === 'manual') {
+                ratioGroup.classList.remove('hidden-section');
+            } else {
+                ratioGroup.classList.add('hidden-section');
+            }
+        }
+
+        // ステップインジケーターの更新
+        function updateStep(stepNumber) {
+            for (let i = 1; i <= 4; i++) {
+                const step = document.getElementById(`step${i}`);
+                step.classList.remove('active', 'completed');
+                
+                const stepNumberDiv = step.querySelector('.step-number');
+                if (stepNumberDiv) {
+                    const japaneseNumbers = ['壱', '弐', '参', '四'];
+                    stepNumberDiv.textContent = japaneseNumbers[i - 1];
+                }
+
+                if (i < stepNumber) {
+                    step.classList.add('completed');
+                } else if (i === stepNumber) {
+                    step.classList.add('active');
+                }
+            }
+        }
+
+        // ファイルアップロード処理
+        async function handleFileUpload() {
+            const dataSplitMethod = document.querySelector('input[name="dataSplitOption"]:checked').value;
+            currentDataSplitMethod = dataSplitMethod;
+
+            const formData = new FormData();
+            formData.append('dataSplitMethod', dataSplitMethod);
+
+            let filesSelected = false;
+
+            if (dataSplitMethod === 'separate') {
+                const trainFiles = document.getElementById('trainFiles').files;
+                if (trainFiles.length === 0) {
+                    showMessage('訓練用のデータファイルを選択せよ。', 'alert-warning');
+                    return;
+                }
+                for (let i = 0; i < trainFiles.length; i++) {
+                    formData.append('trainFiles[]', trainFiles[i]);
+                }
+
+                const testFiles = document.getElementById('testFiles').files;
+                for (let i = 0; i < testFiles.length; i++) {
+                    formData.append('testFiles[]', testFiles[i]);
+                }
+                filesSelected = true;
+
+            } else if (dataSplitMethod === 'combined') {
+                const combinedFiles = document.getElementById('combinedFiles').files;
+                if (combinedFiles.length === 0) {
+                    showMessage('統合データファイルを選択せよ。', 'alert-warning');
+                    return;
+                }
+                for (let i = 0; i < combinedFiles.length; i++) {
+                    formData.append('combinedFiles[]', combinedFiles[i]);
+                }
+                filesSelected = true;
+            }
+
+            if (!filesSelected) {
+                showMessage('データファイルを選択せよ。', 'alert-warning');
+                return;
+            }
+
+            updateStep(2);
+            showMessage('データ装填中... しばし待たれよ', 'alert-info', true);
+            document.getElementById('initialUploadSpinner').style.display = 'inline-block';
+
+            try {
+                const response = await fetch('/upload_files', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                document.getElementById('initialUploadSpinner').style.display = 'none';
+
+                if (data.success) {
+                    uploadedTrainFilePath = data.train_filepath;
+                    uploadedTestFilePath = data.test_filepath;
+
+                    const targetColumnSelect = document.getElementById('targetColumn');
+                    targetColumnSelect.innerHTML = '';
+                    data.columns.forEach(col => {
+                        const option = document.createElement('option');
+                        option.value = col;
+                        option.textContent = col;
+                        targetColumnSelect.appendChild(option);
+                    });
+
+                    document.getElementById('pycaretOptions').classList.remove('hidden-section');
+                    document.getElementById('resultsArea').classList.add('hidden-section');
+                    
+                    if (currentDataSplitMethod === 'combined') {
+                        document.getElementById('combinedDataSplitOptions').classList.remove('hidden-section');
+                    } else {
+                        document.getElementById('combinedDataSplitOptions').classList.add('hidden-section');
+                    }
+
+                    updateStep(3);
+                    showMessage('データ装填完了。目標列を選択し、解析の準備を整えよ。', 'alert-success');
+                } else {
+                    showMessage(`装填失敗: ${data.error}`, 'alert-danger');
+                }
+            } catch (error) {
+                document.getElementById('initialUploadSpinner').style.display = 'none';
+                showMessage(`通信異常: ${error.message}`, 'alert-danger');
+            }
+        }
+
+        // PyCaret解析実行処理
+        async function runPycaret() {
+            const targetColumn = document.getElementById('targetColumn').value;
+            if (!uploadedTrainFilePath || !targetColumn) {
+                showMessage('訓練データが装填され、目標列が選択されているか確認せよ。', 'alert-warning');
+                return;
+            }
+
+            let pycaretSplit = false;
+            let testSplitRatio = null;
+
+            if (currentDataSplitMethod === 'combined') {
+                const selectedSplitMethod = document.querySelector('input[name="splitMethod"]:checked').value;
+                if (selectedSplitMethod === 'pycaret') {
+                    pycaretSplit = true;
+                } else {
+                    testSplitRatio = parseFloat(document.getElementById('testSplitRatio').value);
+                    if (isNaN(testSplitRatio) || testSplitRatio <= 0 || testSplitRatio >= 1) {
+                        showMessage('検証分割比率は0より大きく1未満の数値を入力せよ。', 'alert-warning');
+                        return;
+                    }
+                }
+            }
+
+            const cvMethod = document.querySelector('input[name="cvMethod"]:checked').value;
+            const taskType = document.querySelector('input[name="taskType"]:checked').value;
+            const analysisMode = document.querySelector('input[name="analysisMode"]:checked').value;
+            
+            let requestData = {
+                train_filepath: uploadedTrainFilePath,
+                test_filepath: uploadedTestFilePath,
+                target_column: targetColumn,
+                pycaret_split: pycaretSplit,
+                test_split_ratio: testSplitRatio,
+                cv_method: cvMethod,
+                task_type: taskType,
+                analysis_mode: analysisMode
+            };
+
+            // 個別モデル解析の場合の追加設定
+            if (analysisMode === 'individual') {
+                const selectedModel = document.getElementById('selectedModel').value;
+                if (!selectedModel) {
+                    showMessage('個別解析では修練させるモデルを選択せよ。', 'alert-warning');
+                    return;
+                }
+
+                requestData.selected_model = selectedModel;
+                requestData.hyperparameter_tuning = document.getElementById('enableHyperparameterTuning').checked;
+
+                // カスタムハイパーパラメータの収集
+                const customHyperparameters = {};
+                const hyperparamInputs = document.querySelectorAll('#hyperparameterInputs input');
+                hyperparamInputs.forEach(input => {
+                    if (input.value) {
+                        const paramKey = input.id.replace('hyperparam_', '');
+                        let value = input.value;
+                        
+                        // 数値型の場合は適切に変換
+                        if (input.type === 'number') {
+                            value = parseFloat(value);
+                        }
+                        
+                        customHyperparameters[paramKey] = value;
+                    }
+                });
+                requestData.custom_hyperparameters = customHyperparameters;
+            }
+            
+            updateStep(4);
+            showMessage('解析断行中... 精神を統一し待たれよ', 'alert-info', true);
+            document.getElementById('pycaretLoadingSpinner').style.display = 'inline-block';
+
+            try {
+                const response = await fetch('/run_pycaret', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                const data = await response.json();
+
+                document.getElementById('pycaretLoadingSpinner').style.display = 'none';
+
+                if (data.success) {
+                    document.getElementById('pycaretResults').innerHTML = data.results_html;
+                    document.getElementById('predictionResults').innerHTML = data.prediction_results_html;
+                    document.getElementById('resultsArea').classList.remove('hidden-section');
+                    
+                    const downloadModelsList = document.getElementById('downloadModelsList');
+                    downloadModelsList.innerHTML = '';
+                    if (data.saved_models && data.saved_models.length > 0) {
+                        data.saved_models.forEach(filename => {
+                            const modelItem = document.createElement('div');
+                            modelItem.className = 'model-list-item';
+                            modelItem.innerHTML = `
+                                <span>${filename}</span>
+                                <a href="/download_model/${filename}" class="btn-download" download="${filename}">
+                                    <i class="fas fa-download"></i> 獲得
+                                </a>
+                            `;
+                            downloadModelsList.appendChild(modelItem);
+                        });
+                    } else {
+                        downloadModelsList.innerHTML = '<p style="color: #666666;">獲得可能なモデルなし</p>';
+                    }
+
+                    const modeText = analysisMode === 'compare' ? '自動競合解析' : '個別特化解析';
+                    showMessage(`AI解析完遂！${modeText}による見事なる戦果なり！`, 'alert-success');
+                } else {
+                    showMessage(`解析失敗: ${data.error}`, 'alert-danger');
+                }
+            } catch (error) {
+                document.getElementById('pycaretLoadingSpinner').style.display = 'none';
+                showMessage(`システム異常: ${error.message}`, 'alert-danger');
+            }
+        }
+
+        // メッセージ表示ヘルパー
+        function showMessage(message, type, isLoading = false) {
+            const messageArea = document.getElementById('messageArea');
+            messageArea.className = `message-area ${type}`;
+            messageArea.innerHTML = `<i class="fas fa-${getMessageIcon(type)}"></i> ${message}`;
+            messageArea.style.display = 'block';
+            
+            if (!isLoading) {
+                setTimeout(() => {
+                    messageArea.style.display = 'none';
+                }, 6000);
+            }
+        }
+
+        function getMessageIcon(type) {
+            switch(type) {
+                case 'alert-success': return 'torii-gate';
+                case 'alert-warning': return 'exclamation-triangle';
+                case 'alert-danger': return 'times-circle';
+                case 'alert-info': return 'yin-yang';
+                default: return 'info-circle';
+            }
+        }
+    </script>
+</body>
+</html>

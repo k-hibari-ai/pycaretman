@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI推論機 - 予測の極意</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700;900&family=Zen+Kaku+Gothic+New:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Zen Kaku Gothic New', 'Noto Serif JP', serif;
+            background: #ffffff;
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(0,0,0,0.02) 1px, transparent 1px),
+                radial-gradient(circle at 80% 80%, rgba(0,0,0,0.02) 1px, transparent 1px);
+            background-size: 50px 50px;
+            min-height: 100vh;
+            padding: 20px;
+            color: #1a1a1a;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(90deg, transparent 49.8%, rgba(0,0,0,0.03) 50%, transparent 50.2%),
+                linear-gradient(0deg, transparent 49.8%, rgba(0,0,0,0.03) 50%, transparent 50.2%);
+            background-size: 100px 100px;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+            position: relative;
+            padding: 40px 0;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 4px;
+            background: #000000;
+            border-radius: 2px;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 2px;
+            background: #666666;
+        }
+
+        .header h1 {
+            font-family: 'Noto Serif JP', serif;
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin-bottom: 20px;
+            color: #000000;
+            letter-spacing: 8px;
+            position: relative;
+            text-shadow: 2px 2px 0px #f0f0f0;
+        }
+
+        .header h1::before {
+            content: '〇';
+            position: absolute;
+            left: -60px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #000000;
+            font-size: 1.8rem;
+        }
+
+        .header h1::after {
+            content: '〇';
+            position: absolute;
+            right: -60px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #000000;
+            font-size: 1.8rem;
+        }
+
+        .header p {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #333333;
+            letter-spacing: 4px;
+            margin-top: 10px;
+        }
+
+        .card {
+            background: #ffffff;
+            border: 3px solid #000000;
+            border-radius: 0;
+            padding: 40px;
+            margin-bottom: 40px;
+            box-shadow: 
+                8px 8px 0px #000000,
+                12px 12px 0px #666666;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: #000000;
+            z-index: -1;
+        }
+
+        .card:hover {
+            transform: translate(-4px, -4px);
+            box-shadow: 
+                12px 12px 0px #000000,
+                16px 16px 0px #666666;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #000000;
+            position: relative;
+        }
+
+        .card-header::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            width: 80px;
+            height: 3px;
+            background: #666666;
+        }
+
+        .card-header i {
+            font-size: 2.5rem;
+            margin-right: 20px;
+            color: #000000;
+        }
+
+        .card-header h3 {
+            font-family: 'Noto Serif JP', serif;
+            font-size: 2rem;
+            font-weight: 900;
+            color: #000000;
+            letter-spacing: 4px;
+        }
+
+        .card-header .badge {
+            margin-left: auto;
+            padding: 10px 20px;
+            background: #000000;
+            color: white;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            border-radius: 0;
+        }
+
+        .hidden-section {
+            display: none;
+        }
+
+        .form-group {
+            margin-bottom: 35px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 15px;
+            font-family: 'Noto Serif JP', serif;
+            font-weight: 700;
+            color: #000000;
+            font-size: 1.3rem;
+            letter-spacing: 2px;
+        }
+
+        .option-card {
+            background: #ffffff;
+            border: 3px solid #000000;
+            border-radius: 0;
+            padding: 30px;
+            margin-bottom: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .option-card::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: #f8f8f8;
+            z-index: -1;
+            transition: all 0.3s ease;
+        }
+
+        .option-card:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px #000000;
+        }
+
+        .option-card:hover::before {
+            background: #f0f0f0;
+        }
+
+        .option-card.selected {
+            background: #f8f8f8;
+            box-shadow: 4px 4px 0px #000000;
+            transform: translate(-2px, -2px);
+        }
+
+        .option-card.selected::before {
+            background: #000000;
+        }
+
+        .option-card .form-check-input {
+            margin-right: 20px;
+            transform: scale(1.8);
+            accent-color: #000000;
+        }
+
+        .option-card .form-check-label {
+            font-weight: 700;
+            color: #000000;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            font-size: 1.3rem;
+            letter-spacing: 1px;
+        }
+
+        .option-card .option-icon {
+            font-size: 2.5rem;
+            margin-right: 25px;
+            color: #000000;
+        }
+
+        .option-card .option-description {
+            color: #666666;
+            font-size: 1.1rem;
+            margin-top: 15px;
+            margin-left: 70px;
+            font-weight: 500;
+            line-height: 1.6;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-input-display {
+            display: flex;
+            align-items: center;
+            padding: 40px;
+            border: 4px dashed #000000;
+            border-radius: 0;
+            background: #ffffff;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            min-height: 120px;
+            position: relative;
+        }
+
+        .file-input-display::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
+            background: #f8f8f8;
+            z-index: -1;
+        }
+
+        .file-input-display:hover {
+            background: #f8f8f8;
+            transform: translate(-3px, -3px);
+            box-shadow: 6px 6px 0px #000000;
+        }
+
+        .file-input-display.dragover {
+            background: #f0f0f0;
+            border-style: solid;
+            transform: translate(-3px, -3px);
+            box-shadow: 6px 6px 0px #000000;
+        }
+
+        .file-input-display i {
+            font-size: 4rem;
+            margin-right: 30px;
+            color: #000000;
+        }
+
+        .file-content {
+            flex: 1;
+        }
+
+        .file-text {
+            color: #000000;
+            font-weight: 700;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .file-subtext {
+            color: #666666;
+            font-size: 1.1rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+
+        .selected-files {
+            margin-top: 25px;
+            padding: 25px;
+            background: #f8f8f8;
+            border-left: 6px solid #000000;
+            border-top: 2px solid #000000;
+            border-right: 2px solid #000000;
+            border-bottom: 2px solid #000000;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .file-item:last-child {
+            border-bottom: none;
+        }
+
+        .file-item i {
+            color: #000000;
+            margin-right: 20px;
+            font-size: 1.5rem;
+        }
+
+        .file-name {
+            flex: 1;
+            font-weight: 700;
+            color: #000000;
+            font-size: 1.2rem;
+        }
+
+        .file-size {
+            color: #666666;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .select-wrapper {
+            position: relative;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 20px 60px 20px 30px;
+            border: 3px solid #000000;
+            border-radius: 0;
+            background: #ffffff;
+            font-size: 1.2rem;
+            color: #000000;
+            transition: all 0.3s ease;
+            appearance: none;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+        }
+
+        .form-select:focus {
+            outline: none;
+            background: #f8f8f8;
+            box-shadow: 4px 4px 0px #666666;
+            transform: translate(-2px, -2px);
+        }
+
+        .select-wrapper::after {
+            content: '▼';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            right: 25px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #000000;
+            pointer-events: none;
+            font-size: 1.5rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 18px 25px;
+            border: 3px solid #000000;
+            border-radius: 0;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            background: #ffffff;
+            color: #000000;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .form-control:focus {
+            outline: none;
+            background: #f8f8f8;
+            box-shadow: 4px 4px 0px #666666;
+            transform: translate(-2px, -2px);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 25px 50px;
+            border: 3px solid #000000;
+            border-radius: 0;
+            font-size: 1.4rem;
+            font-weight: 900;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #ffffff;
+            color: #000000;
+            letter-spacing: 3px;
+            position: relative;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: #f0f0f0;
+            z-index: -1;
+        }
+
+        .btn:hover {
+            background: #000000;
+            color: #ffffff;
+            transform: translate(-4px, -4px);
+            box-shadow: 8px 8px 0px #666666;
+        }
+
+        .btn i {
+            margin-right: 15px;
+            font-size: 1.6rem;
+        }
+
+        .btn-primary {
+            background: #ffffff;
+            color: #000000;
+            border-width: 4px;
+        }
+
+        .btn-primary:hover {
+            background: #000000;
+            color: #ffffff;
+        }
+
+        .loading-spinner {
+            display: none;
+            margin-left: 25px;
+        }
+
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 4px solid #666666;
+            border-radius: 50%;
+            border-top-color: #000000;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .message-area {
+            display: none;
+            padding: 30px;
+            border: 3px solid #000000;
+            border-radius: 0;
+            margin-top: 30px;
+            animation: slideIn 0.5s ease;
+            font-weight: 700;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            position: relative;
+        }
+
+        .message-area::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            z-index: -1;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-success {
+            background: #ffffff;
+            color: #000000;
+            border-left: 8px solid #000000;
+        }
+
+        .alert-success::before {
+            background: #f0f0f0;
+        }
+
+        .alert-warning {
+            background: #ffffff;
+            color: #000000;
+            border-left: 8px solid #666666;
+        }
+
+        .alert-warning::before {
+            background: #f8f8f8;
+        }
+
+        .alert-danger {
+            background: #ffffff;
+            color: #000000;
+            border-left: 8px solid #000000;
+            border-top: 3px solid #000000;
+        }
+
+        .alert-danger::before {
+            background: #f0f0f0;
+        }
+
+        .alert-info {
+            background: #ffffff;
+            color: #000000;
+            border-left: 8px solid #333333;
+        }
+
+        .alert-info::before {
+            background: #f8f8f8;
+        }
+
+        .results-content {
+            background: #ffffff;
+            padding: 35px;
+            border: 3px solid #000000;
+            border-radius: 0;
+            margin-bottom: 35px;
+            box-shadow: 4px 4px 0px #666666;
+        }
+
+        .results-content h5 {
+            color: #000000;
+            margin-bottom: 30px;
+            font-family: 'Noto Serif JP', serif;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            font-size: 1.6rem;
+            letter-spacing: 2px;
+        }
+
+        .results-content h5 i {
+            margin-right: 20px;
+            color: #000000;
+            font-size: 2rem;
+        }
+        
+        .download-link-section {
+            margin-top: 30px;
+            text-align: center;
+        }
+        .download-link-section a {
+            display: inline-block;
+            padding: 20px 40px;
+            background: #000000;
+            color: #ffffff;
+            border: 3px solid #000000;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.4rem;
+            border-radius: 0;
+            box-shadow: 6px 6px 0px #666666;
+            transition: all 0.3s ease;
+            letter-spacing: 2px;
+        }
+        .download-link-section a:hover {
+            transform: translate(-3px, -3px);
+            box-shadow: 9px 9px 0px #666666;
+        }
+        .download-link-section a i {
+            margin-right: 15px;
+            font-size: 1.8rem;
+        }
+
+        .task-type-options {
+            background: #f8f8f8;
+            padding: 30px;
+            border: 3px solid #000000;
+            border-radius: 0;
+            margin-top: 30px;
+            box-shadow: 2px 2px 0px #666666;
+        }
+        .task-type-options h6 {
+            color: #000000;
+            font-family: 'Noto Serif JP', serif;
+            font-weight: 900;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+        }
+        .task-type-options h6 i {
+            margin-right: 15px;
+            color: #000000;
+            font-size: 1.8rem;
+        }
+        .task-type-options .option-card {
+            margin-bottom: 15px;
+        }
+
+        /* 推論設定のスタイル */
+        .inference-settings {
+            background: #f8f8f8;
+            padding: 30px;
+            border: 3px solid #000000;
+            border-radius: 0;
+            margin-top: 30px;
+            box-shadow: 2px 2px 0px #666666;
+        }
+        .inference-settings h6 {
+            color: #000000;
+            font-family: 'Noto Serif JP', serif;
+            font-weight: 900;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+        }
+        .inference-settings h6 i {
+            margin-right: 15px;
+            color: #000000;
+            font-size: 1.8rem;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 25px;
+        }
+
+        .setting-item {
+            background: #ffffff;
+            padding: 20px;
+            border: 2px solid #666666;
+            border-radius: 0;
+        }
+
+        .setting-item label {
+            display: block;
+            font-weight: 700;
+            color: #000000;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .setting-item input,
+        .setting-item select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #000000;
+            border-radius: 0;
+            font-size: 1rem;
+            background: #ffffff;
+            color: #000000;
+            font-weight: 500;
+        }
+
+        .setting-item input:focus,
+        .setting-item select:focus {
+            outline: none;
+            background: #f8f8f8;
+            box-shadow: 2px 2px 0px #666666;
+        }
+
+        .model-info {
+            background: #ffffff;
+            padding: 20px;
+            border: 2px solid #666666;
+            border-radius: 0;
+            margin-top: 20px;
+        }
+
+        .model-info h7 {
+            color: #000000;
+            font-family: 'Noto Serif JP', serif;
+            font-weight: 700;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+        }
+
+        .model-info h7 i {
+            margin-right: 10px;
+            color: #000000;
+            font-size: 1.4rem;
+        }
+
+        .model-detail {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        .model-detail span:first-child {
+            font-weight: 600;
+            color: #000000;
+        }
+
+        .model-detail span:last-child {
+            color: #666666;
+        }
+
+        .stats-display {
+            background: #f8f8f8;
+            padding: 20px;
+            border: 2px solid #000000;
+            border-radius: 0;
+            margin-top: 20px;
+        }
+
+        .stats-display h7 {
+            color: #000000;
+            font-family: 'Noto Serif JP', serif;
+            font-weight: 700;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+        }
+
+        .stats-display h7 i {
+            margin-right: 10px;
+            color: #000000;
+            font-size: 1.4rem;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        .stat-item span:first-child {
+            font-weight: 600;
+            color: #000000;
+        }
+
+        .stat-item span:last-child {
+            color: #666666;
+            font-family: monospace;
+        }
+
+        /* レスポンシブ対応 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 15px;
+            }
+            
+            .header h1 {
+                font-size: 2.5rem;
+                letter-spacing: 4px;
+            }
+
+            .header h1::before,
+            .header h1::after {
+                display: none;
+            }
+            
+            .card {
+                padding: 25px;
+            }
+
+            .settings-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .option-card .option-description {
+                margin-left: 0;
+                margin-top: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>AI推論機</h1>
+            <p>予測の極意をここに示さん</p>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-scroll"></i>
+                <h3>推論の準備</h3>
+                <div class="badge">巻物</div>
+            </div>
+            <div class="card-body">
+                <div class="task-type-options mb-4">
+                    <h6><i class="fas fa-sitemap"></i> モデルの解析目的を選択せよ</h6>
+                    <div class="option-card" onclick="selectTaskType('classification')">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="modelTaskType" id="modelTaskClassification" value="classification" checked>
+                            <label class="form-check-label" for="modelTaskClassification">
+                                <i class="fas fa-tags option-icon"></i>
+                                分類（識別）モデル
+                            </label>
+                        </div>
+                        <div class="option-description">
+                            データを特定のカテゴリへ仕分け、識別する修練を積んだモデルなり。
+                        </div>
+                    </div>
+                    <div class="option-card" onclick="selectTaskType('regression')">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="modelTaskType" id="modelTaskRegression" value="regression">
+                            <label class="form-check-label" for="modelTaskRegression">
+                                <i class="fas fa-chart-line option-icon"></i>
+                                回帰（予測）モデル
+                            </label>
+                        </div>
+                        <div class="option-description">
+                            連続する数値の変動を予測し、将来を見通す修練を積んだモデルなり。
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">修練済みモデルを選定せよ</label>
+                    <div class="select-wrapper">
+                        <select class="form-select" id="modelSelect">
+                            <option value="">--- モデルを読み込み中 ---</option>
+                        </select>
+                    </div>
+                    <div id="modelInfo" class="model-info" style="display: none;">
+                        <h7><i class="fas fa-info-circle"></i> モデル情報</h7>
+                        <div id="modelDetails"></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">推論データ（.csv）を装填せよ</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" class="file-input" id="dataFile" accept=".csv">
+                        <div class="file-input-display" id="dataFileDisplay">
+                            <i class="fas fa-file-csv"></i>
+                            <div class="file-content">
+                                <div class="file-text">推論用CSVファイルを選択またはドラッグ</div>
+                                <div class="file-subtext">目標列は不要</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="dataFileSelected" style="display: none;" class="selected-files">
+                        <div style="font-weight: 900; margin-bottom: 20px; color: #000000; letter-spacing: 1px;">
+                            <i class="fas fa-check-circle" style="color: #000000;"></i> 装填済みデータ：
+                        </div>
+                        <div id="dataFilesList"></div>
+                    </div>
+                </div>
+
+                <div class="inference-settings">
+                    <h6><i class="fas fa-cogs"></i> 推論設定の調整</h6>
+                    
+                    <div class="settings-grid">
+                        <div class="setting-item">
+                            <label for="batchSize">バッチサイズ</label>
+                            <input type="number" id="batchSize" value="1000" min="1" max="10000" placeholder="一度に処理するデータ数">
+                        </div>
+                        
+                        <div class="setting-item">
+                            <label for="outputFormat">出力形式</label>
+                            <select id="outputFormat">
+                                <option value="csv">CSV形式</option>
+                                <option value="xlsx">Excel形式</option>
+                                <option value="json">JSON形式</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="option-card" onclick="toggleIncludeInputFeatures()">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="includeInputFeatures">
+                            <label class="form-check-label" for="includeInputFeatures">
+                                <i class="fas fa-table option-icon"></i>
+                                入力特徴量を結果に含める
+                            </label>
+                        </div>
+                        <div class="option-description">
+                            推論結果と併せて、元の入力データも出力ファイルに含める。
+                        </div>
+                    </div>
+
+                    <div id="classificationSettings" class="hidden-section">
+                        <div class="option-card" onclick="toggleIncludeProbability()">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="includeProbability">
+                                <label class="form-check-label" for="includeProbability">
+                                    <i class="fas fa-percentage option-icon"></i>
+                                    予測確率を含める（分類のみ）
+                                </label>
+                            </div>
+                            <div class="option-description">
+                                各クラスの予測確率も出力に含める。モデルの確信度を把握可能。
+                            </div>
+                        </div>
+
+                        <div class="setting-item hidden-section" id="probabilityThresholdGroup">
+                            <label for="probabilityThreshold">確率閾値調整</label>
+                            <input type="number" id="probabilityThreshold" value="0.5" min="0.1" max="0.9" step="0.1" placeholder="予測確率の閾値">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-primary mt-3" onclick="runInference()">
+                    <i class="fas fa-gavel"></i>
+                    推論断行
+                    <div class="loading-spinner" id="inferenceLoadingSpinner">
+                        <div class="spinner"></div>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+        <div class="card hidden-section" id="predictionResultsArea">
+            <div class="card-header">
+                <i class="fas fa-clipboard-check"></i>
+                <h3>推論結果示現</h3>
+                <div class="badge">結果</div>
+            </div>
+            <div class="card-body">
+                <p style="color: #666666; font-size: 1.1rem; margin-bottom: 25px;">
+                    推論は滞りなく完了せり。結果を掌握し、次なる一手へと進むべし。
+                </p>
+                
+                <div id="statsDisplay" class="stats-display">
+                    <h7><i class="fas fa-chart-bar"></i> 推論統計情報</h7>
+                    <div id="statsContent"></div>
+                </div>
+
+                <div class="download-link-section">
+                    <a href="#" id="downloadPredictionLink" style="display: none;">
+                        <i class="fas fa-scroll"></i> 予測結果巻物 獲得
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card hidden-section" id="historyArea">
+            <div class="card-header">
+                <i class="fas fa-history"></i>
+                <h3>推論履歴</h3>
+                <div class="badge">歴史</div>
+            </div>
+            <div class="card-body">
+                <p style="color: #666666; font-size: 1.1rem; margin-bottom: 25px;">
+                    過去に行った推論の記録を確認し、再度獲得することが可能なり。
+                </p>
+                <div id="historyList"></div>
+            </div>
+        </div>
+
+        <div id="messageArea" class="message-area"></div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            setupFileInput('dataFile', 'dataFileDisplay', 'dataFileSelected', 'dataFilesList');
+            selectTaskType('classification');
+            fetchModels();
+            fetchPredictionHistory();
+            updateClassificationSettings();
+        });
+
+        function setupFileInput(inputId, displayId, selectedId, listId) {
+            const fileInput = document.getElementById(inputId);
+            const fileDisplay = document.getElementById(displayId);
+            const selectedDiv = document.getElementById(selectedId);
+            const listDiv = document.getElementById(listId);
+
+            if (!fileInput || !fileDisplay) return;
+
+            fileInput.addEventListener('change', function(e) {
+                updateFileList(e.target.files, selectedDiv, listDiv);
+            });
+
+            fileDisplay.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.classList.add('dragover');
+            });
+
+            fileDisplay.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+            });
+
+            fileDisplay.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    fileInput.files = files; 
+                    updateFileList(files, selectedDiv, listDiv);
+                }
+            });
+        }
+
+        function updateFileList(files, selectedDiv, listDiv) {
+            if (!selectedDiv || !listDiv) return;
+            
+            if (files.length > 0) {
+                selectedDiv.style.display = 'block';
+                listDiv.innerHTML = '';
+                
+                Array.from(files).forEach(file => {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'file-item';
+                    fileItem.innerHTML = `
+                        <i class="fas fa-file"></i> <span class="file-name">${file.name}</span>
+                        <span class="file-size">${formatFileSize(file.size)}</span>
+                    `;
+                    listDiv.appendChild(fileItem);
+                });
+            } else {
+                selectedDiv.style.display = 'none';
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function selectTaskType(type) {
+            document.getElementById('modelTaskClassification').checked = (type === 'classification');
+            document.getElementById('modelTaskRegression').checked = (type === 'regression');
+
+            document.querySelectorAll('.task-type-options .option-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+
+            if (type === 'classification') {
+                document.querySelector('.task-type-options .option-card[onclick="selectTaskType(\'classification\')"]').classList.add('selected');
+            } else {
+                document.querySelector('.task-type-options .option-card[onclick="selectTaskType(\'regression\')"]').classList.add('selected');
+            }
+            
+            updateClassificationSettings();
+        }
+
+        function updateClassificationSettings() {
+            const taskType = document.querySelector('input[name="modelTaskType"]:checked').value;
+            const classificationSettings = document.getElementById('classificationSettings');
+            
+            if (taskType === 'classification') {
+                classificationSettings.classList.remove('hidden-section');
+            } else {
+                classificationSettings.classList.add('hidden-section');
+                // 回帰の場合はチェックボックスをオフにする
+                document.getElementById('includeProbability').checked = false;
+                toggleIncludeProbability();
+            }
+        }
+
+        function toggleIncludeInputFeatures() {
+            const checkbox = document.getElementById('includeInputFeatures');
+            checkbox.checked = !checkbox.checked;
+            
+            const optionCard = checkbox.closest('.option-card');
+            if (checkbox.checked) {
+                optionCard.classList.add('selected');
+            } else {
+                optionCard.classList.remove('selected');
+            }
+        }
+
+        function toggleIncludeProbability() {
+            const checkbox = document.getElementById('includeProbability');
+            checkbox.checked = !checkbox.checked;
+            
+            const optionCard = checkbox.closest('.option-card');
+            const thresholdGroup = document.getElementById('probabilityThresholdGroup');
+            
+            if (checkbox.checked) {
+                optionCard.classList.add('selected');
+                thresholdGroup.classList.remove('hidden-section');
+            } else {
+                optionCard.classList.remove('selected');
+                thresholdGroup.classList.add('hidden-section');
+            }
+        }
+
+        async function fetchModels() {
+            const modelSelect = document.getElementById('modelSelect');
+            modelSelect.innerHTML = '<option value="">--- モデルを読み込み中 ---</option>';
+            try {
+                const response = await fetch('/get_available_models');
+                const data = await response.json();
+
+                if (data.success) {
+                    if (data.models.length > 0) {
+                        modelSelect.innerHTML = '<option value="">--- モデルを選択 ---</option>';
+                        data.models.forEach(modelInfo => {
+                            const option = document.createElement('option');
+                            option.value = modelInfo.filename;
+                            option.textContent = modelInfo.display_name;
+                            option.dataset.modelInfo = JSON.stringify(modelInfo);
+                            modelSelect.appendChild(option);
+                        });
+                    } else {
+                        modelSelect.innerHTML = '<option value="">--- 利用可能なモデルなし ---</option>';
+                        showMessage('学習済みモデルが見つかりません。先に学習アプリでモデルを生成してください。', 'alert-warning');
+                    }
+                } else {
+                    modelSelect.innerHTML = '<option value="">--- モデルの取得エラー ---</option>';
+                    showMessage(`モデルリストの取得に失敗しました: ${data.error}`, 'alert-danger');
+                }
+            } catch (error) {
+                modelSelect.innerHTML = '<option value="">--- サーバー接続エラー ---</option>';
+                showMessage(`モデルリストの取得中に通信エラーが発生しました: ${error.message}`, 'alert-danger');
+            }
+        }
+
+        // モデル選択時にモデル情報を表示
+        document.getElementById('modelSelect').addEventListener('change', function(e) {
+            const selectedOption = e.target.selectedOptions[0];
+            const modelInfoDiv = document.getElementById('modelInfo');
+            const modelDetailsDiv = document.getElementById('modelDetails');
+            
+            if (selectedOption && selectedOption.dataset.modelInfo) {
+                const modelInfo = JSON.parse(selectedOption.dataset.modelInfo);
+                
+                const modifiedDate = new Date(modelInfo.modified_time * 1000).toLocaleString('ja-JP');
+                const fileSize = formatFileSize(modelInfo.size);
+                
+                modelDetailsDiv.innerHTML = `
+                    <div class="model-detail">
+                        <span>ファイル名:</span>
+                        <span>${modelInfo.filename}</span>
+                    </div>
+                    <div class="model-detail">
+                        <span>サイズ:</span>
+                        <span>${fileSize}</span>
+                    </div>
+                    <div class="model-detail">
+                        <span>作成日時:</span>
+                        <span>${modifiedDate}</span>
+                    </div>
+                `;
+                
+                modelInfoDiv.style.display = 'block';
+            } else {
+                modelInfoDiv.style.display = 'none';
+            }
+        });
+
+        async function fetchPredictionHistory() {
+            try {
+                const response = await fetch('/get_prediction_history');
+                const data = await response.json();
+
+                const historyList = document.getElementById('historyList');
+                const historyArea = document.getElementById('historyArea');
+
+                if (data.success && data.history.length > 0) {
+                    historyArea.classList.remove('hidden-section');
+                    historyList.innerHTML = '';
+                    
+                    data.history.forEach(historyItem => {
+                        const createdDate = new Date(historyItem.created_time * 1000).toLocaleString('ja-JP');
+                        const fileSize = formatFileSize(historyItem.size);
+                        
+                        const historyItemDiv = document.createElement('div');
+                        historyItemDiv.className = 'model-list-item';
+                        historyItemDiv.innerHTML = `
+                            <div>
+                                <span>${historyItem.filename}</span>
+                                <div style="font-size: 0.9rem; color: #666666; margin-top: 5px;">
+                                    ${createdDate} - ${fileSize} - ${historyItem.format.toUpperCase()}
+                                </div>
+                            </div>
+                            <a href="/download_predictions/${historyItem.filename}" class="btn-download" download="${historyItem.filename}">
+                                <i class="fas fa-download"></i> 再獲得
+                            </a>
+                        `;
+                        historyList.appendChild(historyItemDiv);
+                    });
+                }
+            } catch (error) {
+                console.error('推論履歴の取得に失敗しました:', error);
+            }
+        }
+
+        async function runInference() {
+            const selectedModelFileName = document.getElementById('modelSelect').value;
+            const dataFile = document.getElementById('dataFile').files[0];
+            const taskType = document.querySelector('input[name="modelTaskType"]:checked').value; 
+
+            if (!selectedModelFileName) {
+                showMessage('修練済みモデルを選択せよ。', 'alert-warning');
+                return;
+            }
+            if (!dataFile) {
+                showMessage('推論データファイルを選定せよ。', 'alert-warning');
+                return;
+            }
+            if (!taskType) {
+                showMessage('モデルの解析目的を選択せよ。', 'alert-warning');
+                return;
+            }
+
+            // 推論設定の収集
+            const batchSize = document.getElementById('batchSize').value || 1000;
+            const includeProbability = document.getElementById('includeProbability').checked;
+            const probabilityThreshold = document.getElementById('probabilityThreshold').value || 0.5;
+            const outputFormat = document.getElementById('outputFormat').value || 'csv';
+            const includeInputFeatures = document.getElementById('includeInputFeatures').checked;
+
+            const formData = new FormData();
+            formData.append('modelFileName', selectedModelFileName);
+            formData.append('dataFile', dataFile);
+            formData.append('taskType', taskType);
+            formData.append('batchSize', batchSize);
+            formData.append('includeProbability', includeProbability);
+            formData.append('probabilityThreshold', probabilityThreshold);
+            formData.append('outputFormat', outputFormat);
+            formData.append('includeInputFeatures', includeInputFeatures);
+
+            showMessage('推論断行中... 予測の風を感じよ', 'alert-info', true);
+            document.getElementById('inferenceLoadingSpinner').style.display = 'inline-block';
+
+            try {
+                const response = await fetch('/upload_data_and_predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                document.getElementById('inferenceLoadingSpinner').style.display = 'none';
+
+                if (data.success) {
+                    const downloadLink = document.getElementById('downloadPredictionLink');
+                    downloadLink.href = `/download_predictions/${data.prediction_filename}`;
+                    downloadLink.download = data.prediction_filename; 
+                    downloadLink.style.display = 'inline-block';
+                    
+                    // 統計情報の表示
+                    displayStats(data.stats, data.total_predictions, data.batch_count, data.output_format);
+                    
+                    document.getElementById('predictionResultsArea').classList.remove('hidden-section');
+                    
+                    // 履歴を更新
+                    fetchPredictionHistory();
+                    
+                    showMessage('推論完了！予測の結果、ここに示現せり！', 'alert-success');
+                } else {
+                    showMessage(`推論失敗: ${data.error}`, 'alert-danger');
+                }
+            } catch (error) {
+                document.getElementById('inferenceLoadingSpinner').style.display = 'none';
+                showMessage(`通信異常: ${error.message}`, 'alert-danger');
+            }
+        }
+
+        function displayStats(stats, totalPredictions, batchCount, outputFormat) {
+            const statsContent = document.getElementById('statsContent');
+            
+            let statsHtml = `
+                <div class="stat-item">
+                    <span>総予測数:</span>
+                    <span>${totalPredictions.toLocaleString()}</span>
+                </div>
+                <div class="stat-item">
+                    <span>バッチ数:</span>
+                    <span>${batchCount}</span>
+                </div>
+                <div class="stat-item">
+                    <span>出力形式:</span>
+                    <span>${outputFormat.toUpperCase()}</span>
+                </div>
+            `;
+
+            if (stats) {
+                if (stats.class_distribution) {
+                    statsHtml += '<div class="stat-item"><span>クラス分布:</span><span></span></div>';
+                    Object.entries(stats.class_distribution).forEach(([className, count]) => {
+                        const percentage = (count / totalPredictions * 100).toFixed(1);
+                        statsHtml += `
+                            <div class="stat-item" style="margin-left: 20px;">
+                                <span>${className}:</span>
+                                <span>${count} (${percentage}%)</span>
+                            </div>
+                        `;
+                    });
+                }
+
+                if (stats.mean_prediction !== undefined) {
+                    statsHtml += `
+                        <div class="stat-item">
+                            <span>平均予測値:</span>
+                            <span>${stats.mean_prediction.toFixed(3)}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>標準偏差:</span>
+                            <span>${stats.std_prediction.toFixed(3)}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>最小値:</span>
+                            <span>${stats.min_prediction.toFixed(3)}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>最大値:</span>
+                            <span>${stats.max_prediction.toFixed(3)}</span>
+                        </div>
+                    `;
+                }
+            }
+
+            statsContent.innerHTML = statsHtml;
+        }
+
+        function showMessage(message, type, isLoading = false) {
+            const messageArea = document.getElementById('messageArea');
+            messageArea.className = `message-area ${type}`;
+            messageArea.innerHTML = `<i class="fas fa-${getMessageIcon(type)}"></i> ${message}`;
+            messageArea.style.display = 'block';
+            
+            if (!isLoading) {
+                setTimeout(() => {
+                    messageArea.style.display = 'none';
+                }, 6000);
+            }
+        }
+
+        function getMessageIcon(type) {
+            switch(type) {
+                case 'alert-success': return 'check-circle';
+                case 'alert-warning': return 'exclamation-triangle';
+                case 'alert-danger': return 'times-circle';
+                case 'alert-info': return 'cloud-upload-alt'; 
+                default: return 'info-circle';
+            }
+        }
+
+        // タスクタイプ変更時のイベントリスナー
+        document.addEventListener('change', function(e) {
+            if (e.target.name === 'modelTaskType') {
+                updateClassificationSettings();
+            }
+        });
+    </script>
+</body>
+</html>
