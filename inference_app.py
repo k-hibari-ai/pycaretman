@@ -1,10 +1,9 @@
 import os
+from pathlib import Path
 from flask import Flask, request, render_template, jsonify, send_from_directory
 import pandas as pd
 import numpy as np
 import logging
-import glob
-import json
 
 # ロギングの設定
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -21,9 +20,29 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['PREDICTION_RESULTS_FOLDER'] = PREDICTION_RESULTS_FOLDER
 
 # 学習アプリのRESULTS_FOLDERへのパス
-# 環境に合わせて適切に設定してください
-LEARNING_APP_RESULTS_FOLDER = '/Users/kotatsutakeda/Code/HIBARI/Pycaretman/models'
-os.makedirs(LEARNING_APP_RESULTS_FOLDER, exist_ok=True)
+# デフォルトではリポジトリ直下のmodelsフォルダを参照する
+_BASE_DIR = Path(__file__).resolve().parent
+_DEFAULT_RESULTS_DIR = _BASE_DIR / 'models'
+_configured_results_dir = os.environ.get('LEARNING_APP_RESULTS_FOLDER')
+
+if _configured_results_dir:
+    resolved_results_dir = Path(_configured_results_dir).expanduser()
+else:
+    resolved_results_dir = _DEFAULT_RESULTS_DIR
+
+try:
+    resolved_results_dir.mkdir(parents=True, exist_ok=True)
+except Exception as exc:
+    logging.warning(
+        "Failed to access the configured results directory '%s'. Falling back to '%s'. Error: %s",
+        resolved_results_dir,
+        _DEFAULT_RESULTS_DIR,
+        exc,
+    )
+    resolved_results_dir = _DEFAULT_RESULTS_DIR
+    resolved_results_dir.mkdir(parents=True, exist_ok=True)
+
+LEARNING_APP_RESULTS_FOLDER = str(resolved_results_dir)
 
 # PyCaretの関数を動的にインポートするためのグローバル変数
 pycaret_load_model = None
@@ -113,6 +132,12 @@ def upload_data_and_predict():
     if not data_file.filename.endswith('.csv'):
         return jsonify({'error': '無効なデータファイル形式です。(.csvファイルを選択してください)'}), 400
 
+    if batch_size is None or batch_size <= 0:
+        return jsonify({'error': 'バッチサイズは正の整数で指定してください。'}), 400
+
+    if task_type == 'classification' and not (0.0 <= probability_threshold <= 1.0):
+        return jsonify({'error': '確率の閾値は0から1の範囲で指定してください。'}), 400
+
     timestamp = pd.Timestamp.now().strftime("%Y%m%d%H%M%S")
     model_filepath = os.path.join(LEARNING_APP_RESULTS_FOLDER, selected_model_filename)
     data_filename_base, data_ext = os.path.splitext(data_file.filename)
@@ -128,7 +153,7 @@ def upload_data_and_predict():
             return jsonify({'error': f"選択されたモデルファイル '{selected_model_filename}' が見つかりません。学習アプリのresultsフォルダを確認してください。"})
 
         # モデルのロード
-        model_path_no_ext = model_filepath.replace('.pkl', '')
+        model_path_no_ext, _ = os.path.splitext(model_filepath)
         loaded_model = pycaret_load_model(model_path_no_ext)
         logging.info("Model loaded successfully.")
 
@@ -250,6 +275,50 @@ def download_predictions(filename):
     except Exception as e:
         logging.error(f"Error serving prediction file {filename}: {e}")
         return "An error occurred during download.", 500
+
+@app.route('/preview_predictions/<filename>', methods=['GET'])
+def preview_predictions(filename):
+    """保存済みの予測結果ファイルをプレビューし、基本統計量を返します。"""
+    try:
+        filepath = os.path.join(app.config['PREDICTION_RESULTS_FOLDER'], filename)
+        if not os.path.exists(filepath):
+            logging.error(f"Preview requested for missing prediction file: {filename}")
+            return jsonify({'error': '指定された予測結果ファイルが見つかりません。'}), 404
+
+        if filename.endswith('.csv'):
+            df = pd.read_csv(filepath)
+        elif filename.endswith('.json'):
+            df = pd.read_json(filepath)
+        elif filename.endswith('.xlsx'):
+            try:
+                df = pd.read_excel(filepath)
+            except ImportError as exc:
+                logging.error(f"Failed to load Excel file for preview: {exc}")
+                return jsonify({'error': 'Excelファイルのプレビューにはopenpyxlが必要です。'}), 500
+        else:
+            return jsonify({'error': 'プレビューに対応していないファイル形式です。'}), 400
+
+        summary = {
+            'row_count': int(df.shape[0]),
+            'column_count': int(df.shape[1]),
+            'columns': df.columns.tolist()
+        }
+
+        numeric_cols = df.select_dtypes(include=['number'])
+        if not numeric_cols.empty:
+            summary['numeric_summary'] = {
+                column: {stat: float(value) for stat, value in stats.items()}
+                for column, stats in numeric_cols.describe().to_dict().items()
+            }
+
+        preview_records = df.head(5).to_dict('records')
+
+        logging.info(f"Generated preview for prediction file: {filename}")
+        return jsonify({'success': True, 'preview': preview_records, 'summary': summary})
+
+    except Exception as e:
+        logging.error(f"予測結果プレビューの生成に失敗しました: {e}", exc_info=True)
+        return jsonify({'error': f'予測結果のプレビュー取得中にエラーが発生しました: {str(e)}'}), 500
 
 @app.route('/get_prediction_history', methods=['GET'])
 def get_prediction_history():
