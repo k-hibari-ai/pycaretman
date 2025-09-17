@@ -414,7 +414,7 @@ def run_pycaret():
 def get_available_models():
     """利用可能なPyCaretモデルのリストを返します。"""
     task_type = request.args.get('task_type', 'classification')
-    
+
     # PyCaretで利用可能なモデルの一覧
     classification_models = {
         'lr': 'Logistic Regression',
@@ -469,6 +469,44 @@ def get_available_models():
         return jsonify({'success': True, 'models': classification_models})
     else:
         return jsonify({'success': True, 'models': regression_models})
+
+def _collect_saved_model_metadata():
+    """保存済みモデルのメタデータを収集します。"""
+    results_folder = app.config['RESULTS_FOLDER']
+    if not os.path.exists(results_folder):
+        logging.info("Results folder does not exist yet: %s", results_folder)
+        return []
+
+    metadata = []
+    for filename in os.listdir(results_folder):
+        if not filename.endswith('.pkl'):
+            continue
+
+        filepath = os.path.join(results_folder, filename)
+        try:
+            stats = os.stat(filepath)
+        except OSError as exc:
+            logging.error("Failed to access saved model file %s: %s", filepath, exc, exc_info=True)
+            continue
+
+        metadata.append({
+            'filename': filename,
+            'size': stats.st_size,
+            'modified_time': float(stats.st_mtime)
+        })
+
+    metadata.sort(key=lambda item: item['modified_time'], reverse=True)
+    return metadata
+
+@app.route('/saved_models_metadata', methods=['GET'])
+def saved_models_metadata():
+    """保存済みモデルの一覧とメタデータを返します。"""
+    try:
+        metadata = _collect_saved_model_metadata()
+        return jsonify({'success': True, 'models': metadata, 'count': len(metadata)})
+    except Exception as e:
+        logging.error("Failed to collect saved model metadata: %s", e, exc_info=True)
+        return jsonify({'error': '保存済みモデル情報の取得中にエラーが発生しました。'}), 500
 
 @app.route('/download_model/<filename>', methods=['GET'])
 def download_model(filename):
