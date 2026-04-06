@@ -1,0 +1,33 @@
+name: Sync Issue to Backlog
+
+on:
+  issues:
+    types: [opened, edited, closed, reopened, labeled, unlabeled, assigned, unassigned]
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  sync:
+    # bot による Issue 編集(マーカー追記等)はスキップしてループを防ぐ
+    if: github.event.sender.type != 'Bot'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: pip install requests
+
+      - name: Sync GitHub Issue → Backlog
+        env:
+          BACKLOG_API_KEY: ${{ secrets.BACKLOG_API_KEY }}
+          BACKLOG_SPACE: hibari-ai.backlog.com
+          BACKLOG_PROJECT_KEY: PRJ_2
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: python .github/scripts/sync_issue_to_backlog.py
