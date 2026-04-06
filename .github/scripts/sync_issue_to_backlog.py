@@ -94,7 +94,13 @@ def build_summary(issue: dict) -> str:
 
 def build_description(issue: dict) -> str:
     body = MARKER_RE.sub("", issue.get("body") or "").rstrip()
-    return f"{body}\n\n---\nGitHub Issue: {issue['html_url']}"
+    repo = GITHUB_REPO
+    num = issue["number"]
+    return (
+        f"{body}\n\n---\n"
+        f"GitHub Issue: {issue['html_url']}\n"
+        f"<!-- github-issue: {repo}#{num} -->"
+    )
 
 
 def pick(items, key, names, fallback_index=0):
