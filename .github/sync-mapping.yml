@@ -1,0 +1,21 @@
+# GitHub ↔ Backlog 同期マッピング
+#
+# ラベル → Backlog 種別(issueType)
+# - 複数ラベルが付いている場合、このリストで先にヒットしたものが優先される
+# - どれにも該当しない場合は default_issue_type
+labels_to_issue_type:
+  enhancement: 要望
+  documentation: 基本操作
+  setup: プロジェクト設定
+  bug: その他
+  question: その他
+
+default_issue_type: その他
+
+# GitHub ログイン名 → Backlog ユーザー ID
+# - 複数 Assignee の場合は先頭 1 人のみ反映
+# - マッピングに無いユーザーは未割当
+users:
+  kotatsutakeda: 2379091
+
+default_assignee: null
