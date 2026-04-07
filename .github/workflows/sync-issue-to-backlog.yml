@@ -30,4 +30,6 @@ jobs:
           BACKLOG_PROJECT_KEY: PRJ_2
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
+          BRIDGE_URL: https://backlog-github-bridge.k-takeda.workers.dev
+          BRIDGE_SECRET: ${{ secrets.BRIDGE_SECRET }}
         run: python .github/scripts/sync_issue_to_backlog.py

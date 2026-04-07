@@ -25,6 +25,8 @@ BACKLOG_PROJECT_KEY = os.environ["BACKLOG_PROJECT_KEY"]
 GITHUB_TOKEN = os.environ["GITHUB_TOKEN"]
 GITHUB_REPO = os.environ["GITHUB_REPOSITORY"]
 GITHUB_EVENT_PATH = os.environ["GITHUB_EVENT_PATH"]
+BRIDGE_URL = os.environ.get("BRIDGE_URL", "")
+BRIDGE_SECRET = os.environ.get("BRIDGE_SECRET", "")
 
 BACKLOG_BASE = f"https://{BACKLOG_SPACE}/api/v2"
 GITHUB_BASE = "https://api.github.com"
@@ -32,6 +34,34 @@ GITHUB_BASE = "https://api.github.com"
 MARKER_RE = re.compile(r"<!--\s*backlog-key:\s*([A-Z0-9_]+-\d+)\s*-->")
 
 MAPPING_PATH = pathlib.Path(".github/sync-mapping.yml")
+
+
+def bridge_check_skip(gh_key: str) -> bool:
+    if not BRIDGE_URL or not BRIDGE_SECRET:
+        return False
+    try:
+        r = requests.post(
+            f"{BRIDGE_URL}/internal/{BRIDGE_SECRET}/check",
+            json={"key": gh_key},
+            timeout=10,
+        )
+        return bool(r.json().get("skip"))
+    except Exception as e:
+        print(f"bridge check failed (continuing): {e}")
+        return False
+
+
+def bridge_mark(bl_key: str) -> None:
+    if not BRIDGE_URL or not BRIDGE_SECRET:
+        return
+    try:
+        requests.post(
+            f"{BRIDGE_URL}/internal/{BRIDGE_SECRET}/mark",
+            json={"key": bl_key},
+            timeout=10,
+        )
+    except Exception as e:
+        print(f"bridge mark failed (continuing): {e}")
 
 
 def load_mapping() -> dict:
@@ -133,6 +163,13 @@ def main() -> int:
         print(f"No issue payload (action={action}); skip.")
         return 0
 
+    # Loop guard: if Workers just updated this Issue (state change from Backlog),
+    # skip to avoid bouncing the same change back to Backlog.
+    gh_key = f"gh-update:{GITHUB_REPO}#{issue['number']}"
+    if action in ("closed", "reopened") and bridge_check_skip(gh_key):
+        print(f"Skip due to bridge debounce: {gh_key}")
+        return 0
+
     mapping = load_mapping()
 
     project = bl_get(f"/projects/{BACKLOG_PROJECT_KEY}")
@@ -175,6 +212,8 @@ def main() -> int:
     # Backlog API: 担当者解除は assigneeId="" の空文字
     data["assigneeId"] = assignee_id if assignee_id is not None else ""
     bl_patch(f"/issues/{backlog_key}", data)
+    # Mark BL-side debounce so the resulting Backlog Webhook is ignored by the bridge.
+    bridge_mark(f"bl-update:{backlog_key}")
     print(f"Updated Backlog {backlog_key} from GH#{issue['number']} (action={action})")
     return 0
 
